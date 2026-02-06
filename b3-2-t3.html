@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>MISSION: RESCUE BI-A ROBOT 🤖</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root { --main: #00d2ff; --accent: #9d50bb; --danger: #ff4b2b; --success: #45a247; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f2027; background: linear-gradient(to right, #2c5364, #203a43, #0f2027); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        #game-box { background: rgba(0, 0, 0, 0.9); border: 2px solid var(--main); width: 90%; max-width: 700px; padding: 30px; border-radius: 20px; box-shadow: 0 0 30px var(--main); text-align: center; }
+        
+        input { padding: 12px; border-radius: 8px; border: 1px solid var(--main); background: rgba(255,255,255,0.1); color: white; width: 80%; margin-bottom: 15px; font-size: 16px; }
+        .ai-core { width: 70px; height: 70px; background: var(--main); border-radius: 50%; margin: 0 auto 15px; box-shadow: 0 0 20px var(--main); display: flex; align-items: center; justify-content: center; font-size: 35px; }
+        .status-bar { width: 100%; height: 12px; background: #333; border-radius: 10px; margin: 15px 0; overflow: hidden; border: 1px solid #555; }
+        #progress { width: 0%; height: 100%; background: linear-gradient(to right, #00d2ff, #9d50bb); transition: width 0.5s; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn { background: rgba(255,255,255,0.1); border: 1px solid var(--main); color: white; padding: 12px; border-radius: 10px; cursor: pointer; transition: 0.3s; }
+        .btn:hover:not(:disabled) { background: var(--main); color: black; font-weight: bold; }
+        .glitch { animation: shake 0.3s infinite; border-color: var(--danger) !important; color: var(--danger) !important; }
+        @keyframes shake { 0% {transform: translate(1px, 1px);} 20% {transform: translate(-2px, 0px);} 100% {transform: translate(0, 0);} }
+        
+        #next-btn { display: none; margin-top: 20px; padding: 10px 30px; background: var(--success); color: white; border: none; border-radius: 50px; cursor: pointer; font-size: 16px; }
+        #play-screen, #final-screen { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="game-box">
+    <div id="login-screen">
+        <h1 style="color: var(--main);">🤖 NHIỆM VỤ GIẢI CỨU</h1>
+        <p>Nhập thông tin để bắt đầu giải cứu Robot Bi-A</p>
+        <input type="text" id="p-name" placeholder="Họ và Tên học sinh" required><br>
+        <input type="text" id="p-class" placeholder="Lớp (Ví dụ: 7A1)" required><br>
+        <button class="btn" style="width: 85%; background: var(--main); color: black; font-weight: bold;" onclick="checkLogin()">VÀO VỊ TRÍ CHIẾN ĐẤU</button>
+    </div>
+
+    <div id="play-screen">
+        <div style="font-size: 20px; color: #ff9f43; margin-bottom: 10px;">ĐIỂM: <span id="points">0</span></div>
+        <div class="ai-core" id="ai-icon">🤖</div>
+        <div class="status-bar"><div id="progress"></div></div>
+        <h2 id="q-text" style="font-size: 18px; min-height: 50px;"></h2>
+        <div class="grid" id="ans-grid"></div>
+        <button id="next-btn" onclick="nextStep()">XÁC NHẬN ➔</button>
+    </div>
+
+    <div id="final-screen">
+        <h1 id="final-title">HỆ THỐNG ĐÃ KHÔI PHỤC!</h1>
+        <p id="final-desc"></p>
+        <h2 id="final-score" style="color: var(--main);"></h2>
+        <p id="save-status" style="color: #aaa; font-style: italic;">Đang lưu kết quả...</p>
+        <button class="btn" onclick="location.reload()">CHƠI LẠI</button>
+    </div>
+</div>
+
+<script>
+    // --- PHẦN CẤU HÌNH GOOGLE FORM CỦA BẠN ---
+    const CONFIG_FORM = {
+        formAction: "https://docs.google.com/forms/d/e/1FAIpQLSda4kGylYwxOjVrfn9VRXVgHqtjg2QhH3KvXYrZKSCrjB3zjQ/viewform?usp=dialog", // THAY LINK formResponse TẠI ĐÂY
+        entryName: "entry.2038111055",  // THAY ID Ô HỌ TÊN
+        entryClass: "entry.1611801759", // THAY ID Ô LỚP
+        //<input type="hidden" name="entry.1611801759" value="">
+        entryScore: "entry.1076541849"  // THAY ID Ô ĐIỂM
+        //<input type="hidden" name="entry.1076541849" value="">
+    };
+
+    const db = [
+        {q: "Để AI nhận diện 'Mặt cười' chính xác, bạn không được để lẫn 'Mặt buồn' vào. Đây là chữ Đ nào?", a: ["Đúng (Accuracy)", "Đủ", "Đa dạng", "Đẹp"], c: 0},
+        {q: "Nếu nhãn 'Vui' có 100 ảnh, nhãn 'Buồn' chỉ có 2 ảnh, máy sẽ bị lỗi gì?", a: ["Hết pin", "Mất mạng", "Lệch (Bias)", "Hỏng cam"], c: 2},
+        {q: "Câu nói 'Garbage In - Garbage Out' có nghĩa là gì?", a: ["AI tự dọn rác", "Dữ liệu rác ra kết quả rác", "AI rất thông minh", "Máy tính cần vệ sinh"], c: 1},
+        {q: "Để AI nhận diện được cả khi đeo khẩu trang, ta cần thêm dữ liệu theo tiêu chuẩn nào?", a: ["Đúng", "Đủ", "Đa dạng (Diversity)", "Đắt"], c: 2},
+        {q: "Mỗi nhãn cảm xúc cần tối thiểu bao nhiêu ảnh để máy bắt đầu học được?", a: ["1 tấm", "5 tấm", "15-20 tấm", "1 triệu tấm"], c: 2},
+        {q: "Chụp ảnh ở nhiều góc nghiêng, thẳng và ánh sáng khác nhau là để đảm bảo tính gì?", a: ["Đa dạng", "Tiết kiệm", "Làm đẹp", "Chính xác"], c: 0},
+        {q: "Thử thách Bias (mời người lạ vào quét thử) dùng để kiểm tra điều gì?", a: ["Độ bền máy", "Tính đa dạng của dữ liệu", "Tốc độ mạng", "Kỹ năng chụp ảnh"], c: 1},
+        {q: "Truy vết nguồn lỗi là bước kiểm tra lại yếu tố nào sau đây?", a: ["Mã nguồn phần mềm", "Dữ liệu huấn luyện", "Hệ điều hành", "Webcam"], c: 1},
+        {q: "Ảnh có bàn tay che mặt hoặc vật gây nhiễu vi phạm tiêu chuẩn nào?", a: ["Đúng (Accuracy)", "Đủ", "Đa dạng", "Độc"], c: 0},
+        {q: "Nếu dữ liệu đã chuẩn 3Đ mà máy vẫn sai, tiết sau chúng ta sẽ chỉnh yếu tố gì?", a: ["Mua máy mới", "Xóa hết ảnh", "Thiết lập đào tạo (Epochs/Batch)", "Nghỉ học"], c: 2}
+    ];
+
+    let cur = 0, score = 0, canChoose = true;
+    let pName = "", pClass = "";
+
+    function checkLogin() {
+        pName = document.getElementById('p-name').value;
+        pClass = document.getElementById('p-class').value;
+        if(pName && pClass) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('play-screen').style.display = 'block';
+            loadQ();
+        } else { alert("Vui lòng nhập đầy đủ tên và lớp!"); }
+    }
+
+    function loadQ() {
+        canChoose = true;
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('ai-icon').classList.remove('glitch');
+        let q = db[cur];
+        document.getElementById('q-text').innerText = (cur+1) + ". " + q.q;
+        document.getElementById('progress').style.width = (cur/db.length)*100 + "%";
+        let grid = document.getElementById('ans-grid');
+        grid.innerHTML = '';
+        q.a.forEach((txt, i) => {
+            let b = document.createElement('button'); b.className = 'btn'; b.innerText = txt;
+            b.onclick = () => {
+                if(!canChoose) return;
+                canChoose = false;
+                if(i === q.c) { b.style.background = "var(--success)"; score += 20; confetti(); }
+                else { b.style.background = "var(--danger)"; document.getElementById('ai-icon').classList.add('glitch'); score -= 5; }
+                document.getElementById('points').innerText = score;
+                document.getElementById('next-btn').style.display = 'block';
+            };
+            grid.appendChild(b);
+        });
+    }
+
+    function nextStep() {
+        cur++;
+        if(cur < db.length) loadQ();
+        else finishGame();
+    }
+
+    function finishGame() {
+        document.getElementById('play-screen').style.display = 'none';
+        document.getElementById('final-screen').style.display = 'block';
+        document.getElementById('final-score').innerText = score + " ĐIỂM";
+        document.getElementById('final-desc').innerText = "Chúc mừng " + pName + " (" + pClass + ")!";
+        
+        // TỰ ĐỘNG GỬI DỮ LIỆU VỀ GOOGLE FORM
+        let url = `${CONFIG_FORM.formAction}?${CONFIG_FORM.entryName}=${encodeURIComponent(pName)}&${CONFIG_FORM.entryClass}=${encodeURIComponent(pClass)}&${CONFIG_FORM.entryScore}=${score}&submit=Submit`;
+        
+        fetch(url, { mode: 'no-cors' })
+            .then(() => { document.getElementById('save-status').innerText = "✅ Kết quả đã được lưu!"; })
+            .catch(() => { document.getElementById('save-status').innerText = "❌ Lỗi lưu dữ liệu. Hãy báo GV!"; });
+    }
+</script>
+</body>
+</html>
