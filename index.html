@@ -2,69 +2,65 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>AI RESCUE: CYBER MISSION 🤖</title>
+    <title>AI RESCUE FORCE: HỨNG DỮ LIỆU</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --main: #00f2ff; --accent: #bc13fe; --danger: #ff0055; --success: #2ecc71; }
-        body { font-family: 'Segoe UI', sans-serif; background: #050a10; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        :root { --main: #00f2ff; --accent: #bc13fe; --danger: #ff0055; --success: #2ecc71; --bg-dark: #050a10; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-dark); color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; user-select: none; cursor: none; }
         
-        /* Giao diện Neon Card */
-        #game-box { background: rgba(16, 22, 32, 0.95); border: 2px solid var(--main); width: 90%; max-width: 600px; padding: 30px; border-radius: 15px; box-shadow: 0 0 20px var(--main), inset 0 0 10px var(--main); text-align: center; position: relative; }
+        #game-area { background: linear-gradient(to bottom, #0d1a2a, #050a10); border: 2px solid var(--main); width: 90%; max-width: 800px; height: 90vh; max-height: 600px; position: relative; overflow: hidden; border-radius: 15px; box-shadow: 0 0 20px var(--main), inset 0 0 10px var(--main); }
         
-        /* Thanh máu HP */
-        .hp-container { width: 100%; height: 20px; background: #222; border-radius: 10px; margin: 10px 0; border: 1px solid #444; position: relative; }
-        #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #2ecc71); border-radius: 10px; transition: 0.5s; }
-        .hp-text { position: absolute; width: 100%; text-align: center; font-size: 12px; font-weight: bold; top: 2px; text-shadow: 1px 1px #000; }
-
-        input { padding: 12px; border-radius: 5px; border: 1px solid var(--main); background: #000; color: var(--main); width: 80%; margin-bottom: 15px; text-align: center; box-shadow: 0 0 5px var(--main); }
+        #player-robot { position: absolute; bottom: 10px; width: 80px; height: 80px; background: rgba(0, 242, 255, 0.2); border: 2px solid var(--main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; left: 50%; transform: translateX(-50%); transition: left 0.1s linear; z-index: 10; cursor: grab; box-shadow: 0 0 15px var(--main); }
         
-        .ai-avatar { font-size: 50px; margin-bottom: 10px; filter: drop-shadow(0 0 10px var(--main)); }
+        .falling-data { position: absolute; top: -50px; width: 120px; height: 40px; background: #333; border: 2px solid #555; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 14px; text-align: center; color: white; transition: background 0.1s; z-index: 5; box-shadow: 0 0 5px rgba(255,255,255,0.2); }
+        .falling-data.correct { background: var(--success); border-color: var(--success); box-shadow: 0 0 10px var(--success); }
+        .falling-data.wrong { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 10px var(--danger); }
         
-        .grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 20px; }
-        .btn { background: rgba(0, 242, 255, 0.05); border: 1px solid var(--main); color: var(--main); padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px; }
-        .btn:hover:not(:disabled) { background: var(--main); color: #000; box-shadow: 0 0 15px var(--main); }
+        #question-box { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 80%; padding: 15px; background: rgba(0,0,0,0.8); border: 1px solid var(--accent); border-radius: 8px; text-align: center; font-size: 18px; font-weight: bold; color: var(--accent); z-index: 20; box-shadow: 0 0 10px var(--accent); }
         
-        #next-btn { display: none; margin-top: 20px; background: var(--accent); color: white; border: none; padding: 12px 40px; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 0 15px var(--accent); }
-
-        /* Hiệu ứng rung màn hình khi sai */
-        .screen-shake { animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both; }
+        #score-display { position: absolute; top: 10px; left: 10px; font-size: 20px; font-weight: bold; color: var(--main); z-index: 20; text-shadow: 0 0 5px var(--main); }
+        
+        /* Login/Final Screen */
+        .game-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 30; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .game-overlay input { padding: 12px; border-radius: 5px; border: 1px solid var(--main); background: #000; color: var(--main); width: 80%; max-width: 300px; margin-bottom: 15px; text-align: center; box-shadow: 0 0 5px var(--main); }
+        .game-overlay button { background: var(--main); color: #000; border: none; padding: 12px 30px; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 0 15px var(--main); margin-top: 10px; }
+        .game-overlay h1 { color: var(--main); text-shadow: 0 0 10px var(--main); }
+        .game-overlay .message { color: #aaa; margin-bottom: 20px; }
+        
+        .screen-shake-anim { animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
-
-        #final-screen, #play-screen { display: none; }
-        .rank { font-size: 24px; font-weight: bold; color: var(--accent); margin-top: 10px; }
+        
+        .hit-effect { background-color: var(--danger) !important; box-shadow: 0 0 20px var(--danger) !important; animation: hitFlash 0.3s forwards; }
+        @keyframes hitFlash { 0% { opacity: 1; } 100% { opacity: 0; } }
+        
+        #final-score { font-size: 40px; font-weight: bold; color: var(--success); text-shadow: 0 0 15px var(--success); }
+        #final-rank { font-size: 24px; color: var(--accent); margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div id="game-box" id="main-container">
-    <div id="login-screen">
-        <div class="ai-avatar">🤖</div>
-        <h1 style="color: var(--main); text-shadow: 0 0 10px var(--main);">AI RESCUE MISSION</h1>
-        <p style="color: #aaa;">Hệ thống Bi-A đang bị tấn công bởi dữ liệu rác!<br>Hãy nhập thông tin để giải cứu.</p>
-        <input type="text" id="p-name" placeholder="TÊN CHIẾN BINH"><br>
-        <input type="text" id="p-class" placeholder="MÃ ĐƠN VỊ (LỚP)"><br>
-        <button class="btn" style="width: 85%;" onclick="checkLogin()">KÍCH HOẠT HỆ THỐNG</button>
+<div id="game-area">
+    <div id="score-display">ĐIỂM: <span id="current-score">0</span></div>
+    <div id="question-box">Loading Question...</div>
+    <div id="player-robot">🤖</div>
+
+    <div id="login-screen" class="game-overlay">
+        <div style="font-size: 60px; color: var(--main); text-shadow: 0 0 20px var(--main);">🤖</div>
+        <h1>AI RESCUE FORCE</h1>
+        <p class="message">Robot Bi-A đang cần dữ liệu chuẩn để hoạt động.<br>Hãy giúp nó hứng đúng dữ liệu.</p>
+        <input type="text" id="p-name" placeholder="TÊN PHI CÔNG" required><br>
+        <input type="text" id="p-class" placeholder="MÃ ĐƠN VỊ (LỚP)" required><br>
+        <button onclick="startGame()">KHỞI ĐỘNG NHIỆM VỤ</button>
     </div>
 
-    <div id="play-screen">
-        <div class="hp-container">
-            <div id="hp-bar"></div>
-            <div class="hp-text">HỆ THỐNG CÒN: <span id="hp-val">100</span>%</div>
-        </div>
-        <div class="ai-avatar" id="ai-icon">🤖</div>
-        <div id="q-text" style="font-size: 18px; margin: 15px 0; font-weight: bold; min-height: 40px;"></div>
-        <div class="grid" id="ans-grid"></div>
-        <button id="next-btn" onclick="nextStep()">TIẾP TỤC ➔</button>
-    </div>
-
-    <div id="final-screen">
-        <div id="final-icon" style="font-size: 60px;">🏆</div>
-        <h1 id="final-title">KẾT QUẢ</h1>
-        <p id="final-desc"></p>
-        <div class="rank" id="rank-text"></div>
-        <h2 id="final-score" style="color: var(--main); font-size: 40px;"></h2>
-        <p id="save-status" style="color: #45a247;">Đang đồng bộ dữ liệu...</p>
-        <button class="btn" onclick="location.reload()">LÀM LẠI NHIỆM VỤ</button>
+    <div id="final-screen" class="game-overlay" style="display: none;">
+        <div style="font-size: 60px;">🏆</div>
+        <h1>NHIỆM VỤ HOÀN THÀNH!</h1>
+        <p class="message" id="final-message"></p>
+        <div id="final-rank"></div>
+        <div id="final-score"></div>
+        <p style="color: #45a247;">✅ Dữ liệu đã được đồng bộ.</p>
+        <button onclick="location.reload()">BẮT ĐẦU NHIỆM VỤ MỚI</button>
     </div>
 </div>
 
@@ -78,96 +74,226 @@
         entryScore: "entry.1076541849"
     };
 
-    const db = [
-        {q: "Để tránh AI nhận diện 'Mặt cười' thành 'Mặt mếu', ta cần lọc ảnh thật kỹ. Đây là tiêu chuẩn nào?", a: ["Đúng (Accuracy)", "Đủ", "Đa dạng", "Đắt"], c: 0},
-        {q: "AI chỉ được học ảnh của 1 bạn trong nhóm nên không nhận diện được các bạn khác. Đây là lỗi?", a: ["Lỗi phần cứng", "Lệch (Bias)", "Hết bộ nhớ", "Virus"], c: 1},
-        {q: "Câu nói 'Garbage In - Garbage Out' nhắc nhở điều gì?", a: ["AI tự dọn rác", "Dữ liệu rác cho kết quả rác", "Máy tính bị hỏng", "Cần quét dọn phòng máy"], c: 1},
-        {q: "Cần chụp ảnh mặt ở nhiều góc (trái, phải, thẳng) để đảm bảo chữ Đ nào?", a: ["Đúng", "Đủ", "Đa dạng (Diversity)", "Đẹp"], c: 2},
-        {q: "Mỗi nhãn cảm xúc cần tối thiểu bao nhiêu mẫu ảnh?", a: ["1 tấm", "5 tấm", "15-20 tấm", "1000 tấm"], c: 2},
-        {q: "Khi AI đoán sai, ta cần quay lại kiểm tra ảnh huấn luyện. Bước này gọi là gì?", a: ["Xóa máy", "Truy vết nguồn lỗi", "Chụp ảnh lại", "Nâng cấp RAM"], c: 1},
-        {q: "Để máy không bị 'Lệch' (Bias), số lượng ảnh giữa các nhãn nên như thế nào?", a: ["Càng ít càng tốt", "Nhãn nhiều nhãn ít", "Bằng nhau", "Không quan trọng"], c: 2},
-        {q: "Thử thách Bias (mời người lạ quét thử) giúp kiểm tra tính gì?", a: ["Độ bền máy", "Tính đa dạng", "Tốc độ mạng", "Độ sáng đèn"], c: 1},
-        {q: "Ảnh có bàn tay che mặt hoặc vật lạ che khuất là vi phạm chữ Đ nào?", a: ["Đúng (Accuracy)", "Đủ", "Đẹp", "Lạ"], c: 0},
-        {q: "Nếu dữ liệu đã chuẩn mà máy vẫn sai, ta cần chỉnh yếu tố nào ở bước Train?", a: ["Epochs & Batch size", "Thay Webcam mới", "Xóa Form", "Tắt trình duyệt"], c: 0}
+    const questions = [
+        { q: "Để AI nhận diện 'Mặt cười' chính xác, bạn không được để lẫn 'Mặt buồn' vào. Đây là tiêu chuẩn nào?", a: ["Đúng (Accuracy)", "Đủ", "Đa dạng", "Đắt"], c: 0 },
+        { q: "AI chỉ học được ảnh của 1 bạn trong nhóm nên không nhận diện được các bạn khác. Đây là lỗi gì?", a: ["Lỗi phần cứng", "Lệch (Bias)", "Hết bộ nhớ", "Virus"], c: 1 },
+        { q: "Câu nói 'Garbage In - Garbage Out' nhắc nhở điều gì?", a: ["AI tự dọn rác", "Dữ liệu rác cho kết quả rác", "Máy tính bị hỏng", "Cần quét dọn phòng máy"], c: 1 },
+        { q: "Cần chụp ảnh mặt ở nhiều góc (trái, phải, thẳng) để đảm bảo tiêu chuẩn nào?", a: ["Đúng", "Đủ", "Đa dạng (Diversity)", "Đẹp"], c: 2 },
+        { q: "Mỗi nhãn cảm xúc cần tối thiểu bao nhiêu mẫu ảnh để máy học tốt?", a: ["1 tấm", "5 tấm", "15-20 tấm", "1000 tấm"], c: 2 },
+        { q: "Khi AI đoán sai, ta cần quay lại kiểm tra ảnh huấn luyện. Bước này gọi là gì?", a: ["Xóa máy", "Truy vết nguồn lỗi", "Chụp ảnh lại", "Nâng cấp RAM"], c: 1 },
+        { q: "Để máy không bị 'Lệch' (Bias), số lượng ảnh giữa các nhãn nên như thế nào?", a: ["Càng ít càng tốt", "Nhãn nhiều nhãn ít", "Bằng nhau", "Không quan trọng"], c: 2 },
+        { q: "Thử thách Bias (mời người lạ quét thử) giúp kiểm tra tính gì của dữ liệu?", a: ["Độ bền máy", "Tính đa dạng", "Tốc độ mạng", "Độ sáng đèn"], c: 1 },
+        { q: "Ảnh có bàn tay che mặt hoặc vật lạ che khuất là vi phạm tiêu chuẩn nào?", a: ["Đúng (Accuracy)", "Đủ", "Đẹp", "Lạ"], c: 0 },
+        { q: "Nếu dữ liệu đã chuẩn mà máy vẫn sai, ta cần chỉnh yếu tố nào ở bước Train?", a: ["Epochs & Batch size", "Thay Webcam mới", "Xóa Form", "Tắt trình duyệt"], c: 0 }
     ];
 
-    let cur = 0, score = 0, hp = 100, canChoose = true;
-    let pName = "", pClass = "";
+    let currentScore = 0;
+    let playerRobot;
+    let gameArea;
+    let qBox;
+    let currentQuestionIndex = 0;
+    let playerData = []; // Lưu lại dữ liệu để gửi form
+    let gameInterval;
+    let dataDropInterval;
+    const fallingDataElements = [];
 
-    function checkLogin() {
-        pName = document.getElementById('p-name').value;
-        pClass = document.getElementById('p-class').value;
-        if(pName && pClass) {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('play-screen').style.display = 'block';
-            loadQ();
-        } else { alert("Hãy nhập Tên và Lớp để kích hoạt Robot!"); }
-    }
+    function startGame() {
+        const playerName = document.getElementById('p-name').value;
+        const playerClass = document.getElementById('p-class').value;
 
-    function loadQ() {
-        canChoose = true;
-        document.getElementById('next-btn').style.display = 'none';
-        document.getElementById('game-box').classList.remove('screen-shake');
-        let q = db[cur];
-        document.getElementById('q-text').innerText = "QUERY [" + (cur+1) + "]: " + q.q;
+        if (!playerName || !playerClass) {
+            alert("Hãy nhập Tên và Lớp để bắt đầu nhiệm vụ!");
+            return;
+        }
+
+        playerData = { name: playerName, class: playerClass };
+        document.getElementById('login-screen').style.display = 'none';
         
-        let grid = document.getElementById('ans-grid');
-        grid.innerHTML = '';
-        q.a.forEach((txt, i) => {
-            let b = document.createElement('button'); b.className = 'btn'; b.innerText = txt;
-            b.onclick = () => {
-                if(!canChoose) return;
-                canChoose = false;
-                if(i === q.c) {
-                    b.style.background = "var(--success)"; b.style.color = "#000";
-                    score += 20; confetti({particleCount: 40, spread: 50});
-                } else {
-                    b.style.background = "var(--danger)"; b.style.color = "#fff";
-                    hp -= 15; score -= 5;
-                    document.getElementById('game-box').classList.add('screen-shake');
-                    if(hp < 0) hp = 0;
-                    document.getElementById('hp-bar').style.width = hp + "%";
-                    document.getElementById('hp-val').innerText = hp;
-                }
-                document.getElementById('next-btn').style.display = 'block';
-                Array.from(grid.children).forEach(btn => btn.disabled = true);
-            };
-            grid.appendChild(b);
+        playerRobot = document.getElementById('player-robot');
+        gameArea = document.getElementById('game-area');
+        qBox = document.getElementById('question-box');
+
+        gameArea.addEventListener('mousemove', (e) => {
+            let gameAreaRect = gameArea.getBoundingClientRect();
+            let newX = e.clientX - gameAreaRect.left - playerRobot.offsetWidth / 2;
+            newX = Math.max(0, Math.min(newX, gameAreaRect.width - playerRobot.offsetWidth));
+            playerRobot.style.left = newX + 'px';
         });
+
+        loadQuestion();
     }
 
-    function nextStep() {
-        cur++;
-        if(cur < db.length && hp > 0) loadQ();
-        else finishGame();
+    function loadQuestion() {
+        if (currentQuestionIndex >= questions.length) {
+            endGame();
+            return;
+        }
+
+        qBox.innerText = `QUERY ${currentQuestionIndex + 1}: ${questions[currentQuestionIndex].q}`;
+        
+        // Clear falling data from previous question
+        fallingDataElements.forEach(el => el.remove());
+        fallingDataElements.length = 0;
+        clearInterval(dataDropInterval);
+
+        dataDropInterval = setInterval(dropData, 1500); // Drop a data box every 1.5 seconds
+        gameInterval = setTimeout(nextQuestion, 8000); // Next question after 8 seconds if no answer
     }
 
-    function finishGame() {
-        document.getElementById('play-screen').style.display = 'none';
-        document.getElementById('final-screen').style.display = 'block';
-        document.getElementById('final-score').innerText = score + " PTS";
+    function dropData() {
+        const q = questions[currentQuestionIndex];
+        const answers = [...q.a]; // Copy array to avoid modifying original
         
-        let rank = "";
-        if(score >= 180) { rank = "RANK: CHIẾN BINH HUYỀN THOẠI 💎"; document.getElementById('final-icon').innerText = "👑"; }
-        else if(score >= 120) { rank = "RANK: CHUYÊN GIA DỮ LIỆU 🚀"; document.getElementById('final-icon').innerText = "⭐"; }
-        else { rank = "RANK: TẬP SỰ AI 🛠️"; document.getElementById('final-icon').innerText = "🤖"; }
-        
-        document.getElementById('rank-text').innerText = rank;
-        document.getElementById('final-desc').innerText = "Cảm ơn " + pName + " đã tham gia giải cứu!";
+        // Randomize the order of answers so correct answer isn't always in same position
+        answers.sort(() => Math.random() - 0.5);
 
-        // Gửi dữ liệu ngầm
+        const dataBox = document.createElement('div');
+        dataBox.className = 'falling-data';
+        dataBox.innerText = answers[0]; // Take the first answer after randomization
+        dataBox.dataset.answer = answers[0]; // Store original answer text
+        dataBox.dataset.isCorrect = (answers[0] === q.a[q.c]); // Check if it's the correct one
+
+        dataBox.style.left = Math.random() * (gameArea.offsetWidth - dataBox.offsetWidth - 20) + 10 + 'px';
+        gameArea.appendChild(dataBox);
+        fallingDataElements.push(dataBox);
+
+        let speed = 2; // Initial falling speed
+        let fallInterval = setInterval(() => {
+            let currentTop = parseInt(dataBox.style.top);
+            dataBox.style.top = (currentTop + speed) + 'px';
+
+            // Check for collision
+            if (isColliding(playerRobot, dataBox)) {
+                handleCollision(dataBox, clearInterval, fallInterval);
+                return;
+            }
+
+            // If data falls off screen
+            if (currentTop > gameArea.offsetHeight) {
+                if (dataBox.dataset.isCorrect === 'true') {
+                    updateScore(-10, 'miss'); // Missed correct answer
+                    playerRobot.classList.add('hit-effect');
+                    setTimeout(() => playerRobot.classList.remove('hit-effect'), 300);
+                    gameArea.classList.add('screen-shake-anim');
+                    setTimeout(() => gameArea.classList.remove('screen-shake-anim'), 200);
+                }
+                dataBox.remove();
+                fallingDataElements.splice(fallingDataElements.indexOf(dataBox), 1);
+                clearInterval(fallInterval);
+            }
+        }, 20);
+    }
+
+    function isColliding(elem1, elem2) {
+        let rect1 = elem1.getBoundingClientRect();
+        let rect2 = elem2.getBoundingClientRect();
+        return !(rect1.bottom < rect2.top ||
+                 rect1.top > rect2.bottom ||
+                 rect1.right < rect2.left ||
+                 rect1.left > rect2.right);
+    }
+
+    function handleCollision(dataBox, clearIntervalCallback, fallInterval) {
+        clearIntervalCallback(fallInterval);
+        dataBox.remove();
+        fallingDataElements.splice(fallingDataElements.indexOf(dataBox), 1);
+
+        if (dataBox.dataset.isCorrect === 'true') {
+            updateScore(20, 'hit');
+            confetti({ particleCount: 50, spread: 70, origin: { y: 0.8 } });
+            nextQuestion();
+        } else {
+            updateScore(-15, 'hit');
+            gameArea.classList.add('screen-shake-anim');
+            setTimeout(() => gameArea.classList.remove('screen-shake-anim'), 200);
+            playerRobot.classList.add('hit-effect');
+            setTimeout(() => playerRobot.classList.remove('hit-effect'), 300);
+        }
+    }
+
+    function updateScore(points, type) {
+        currentScore += points;
+        document.getElementById('current-score').innerText = currentScore;
+        
+        // Simple visual feedback for score change
+        let scoreDisplay = document.getElementById('score-display');
+        scoreDisplay.style.transition = 'none';
+        scoreDisplay.style.color = (points > 0 ? varToRgb('--success') : varToRgb('--danger'));
+        scoreDisplay.style.textShadow = `0 0 10px ${scoreDisplay.style.color}`;
+        setTimeout(() => {
+            scoreDisplay.style.transition = 'color 0.5s, text-shadow 0.5s';
+            scoreDisplay.style.color = varToRgb('--main');
+            scoreDisplay.style.textShadow = `0 0 5px ${varToRgb('--main')}`;
+        }, 200);
+    }
+
+    function nextQuestion() {
+        clearTimeout(gameInterval);
+        clearInterval(dataDropInterval);
+        fallingDataElements.forEach(el => el.remove()); // Remove all falling data
+        fallingDataElements.length = 0; // Clear array
+        currentQuestionIndex++;
+        setTimeout(loadQuestion, 1000); // Small delay before next question
+    }
+
+    function endGame() {
+        document.getElementById('game-area').removeEventListener('mousemove', (e) => {
+            // Remove the mousemove listener
+        }); 
+        clearInterval(dataDropInterval);
+        clearTimeout(gameInterval);
+        fallingDataElements.forEach(el => el.remove()); // Clean up any remaining falling data
+
+        document.getElementById('final-screen').style.display = 'flex';
+        document.getElementById('final-score').innerText = currentScore + " ĐIỂM";
+        document.getElementById('final-message').innerText = `Chúc mừng ${playerData.name} (${playerData.class}) đã hoàn thành nhiệm vụ!`;
+
+        let rankText = "";
+        if (currentScore >= 160) { rankText = "RANK: KỸ SƯ DỮ LIỆU TỐI CAO 👑"; }
+        else if (currentScore >= 120) { rankText = "RANK: CHUYÊN VIÊN PHÂN TÍCH 🚀"; }
+        else { rankText = "RANK: THỰC TẬP SINH DỮ LIỆU 🛠️"; }
+        document.getElementById('final-rank').innerText = rankText;
+
+        // Gửi dữ liệu ngầm về Google Form
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = CONFIG_FORM.formAction;
         form.target = 'hidden_iframe';
-        const data = {[CONFIG_FORM.entryName]: pName, [CONFIG_FORM.entryClass]: pClass, [CONFIG_FORM.entryScore]: score};
-        for (const key in data) {
-            const input = document.createElement('input'); input.type = 'hidden'; input.name = key; input.value = data[key];
+
+        const dataToSend = {
+            [CONFIG_FORM.entryName]: playerData.name,
+            [CONFIG_FORM.entryClass]: playerData.class,
+            [CONFIG_FORM.entryScore]: currentScore
+        };
+
+        for (const key in dataToSend) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = dataToSend[key];
             form.appendChild(input);
         }
         document.body.appendChild(form);
         form.submit();
     }
+
+    // Helper to get RGB value from CSS variable (for dynamic text shadow)
+    function varToRgb(variable) {
+        const tempDiv = document.createElement('div');
+        tempDiv.style.color = getComputedStyle(document.documentElement).getPropertyValue(variable);
+        document.body.appendChild(tempDiv);
+        const color = getComputedStyle(tempDiv).color;
+        tempDiv.remove();
+        return color;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Hide default mouse cursor
+        document.body.style.cursor = 'none'; 
+        // Attach event listener only after game starts
+        gameArea.style.cursor = 'none'; // Hide cursor over game area
+    });
+
 </script>
 </body>
 </html>
